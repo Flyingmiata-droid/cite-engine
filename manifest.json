@@ -1,0 +1,10 @@
+{
+  "id": "cite-engine",
+  "name": "Cite Engine",
+  "version": "0.0.1",
+  "minAppVersion": "1.5.0",
+  "description": "Drift-proof, closed-corpus citations via block refs. Cite only from your clipped sources — fabrication impossible by construction.",
+  "author": "Nick",
+  "authorUrl": "https://github.com/Flyingmiata-droid",
+  "isDesktopOnly": false
+}
