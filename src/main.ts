@@ -196,7 +196,13 @@ export default class CiteEnginePlugin extends Plugin {
       return `UNKNOWN SOURCE  ${i.citekey}`;
     });
     const report = `# Integrity report — ${file.basename}\n\n${lines.join("\n\n")}\n`;
-    await this.app.vault.create(`Integrity report — ${file.basename}.md`, report);
+    const reportPath = `Integrity report — ${file.basename}.md`;
+    const existingReport = this.app.vault.getAbstractFileByPath(reportPath);
+    if (existingReport instanceof TFile) {
+      await this.app.vault.modify(existingReport, report);
+    } else {
+      await this.app.vault.create(reportPath, report);
+    }
     new Notice(`${issues.length} issue(s). See integrity report.`);
   }
 }

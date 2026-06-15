@@ -1,6 +1,6 @@
 {
   "name": "cite-engine",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Drift-proof closed-corpus citations for Obsidian",
   "main": "main.js",
   "type": "module",
