@@ -2,11 +2,11 @@ import {
   App,
   Editor,
   FuzzySuggestModal,
-  MarkdownFileInfo,
   Modal,
   Notice,
   Plugin,
   Setting,
+  TFile,
   parseYaml,
   stringifyYaml,
 } from "obsidian";
@@ -104,78 +104,99 @@ class LocatorModal extends Modal {
 
 export default class CiteEnginePlugin extends Plugin {
   async onload(): Promise<void> {
+    this.addRibbonIcon("quote-glyph", "Cite Engine: cite a passage", () => this.cite());
+
     this.addCommand({
       id: "stamp-source",
       name: "Stamp source (assign citekey + block ids)",
-      editorCallback: async (_editor: Editor, ctx: MarkdownFileInfo) => {
-        const file = ctx.file;
-        if (!file) return;
-        const text = await this.app.vault.read(file);
-        const { fm, body } = splitFrontmatter(text);
-        if (!fm.citekey) {
-          fm.citekey = generateCitekey({
-            author: String(fm.author ?? ""),
-            year: String(fm.year ?? ""),
-            title: String(fm.title ?? file.basename),
-          });
-        }
-        const { content } = stampNote(body);
-        await this.app.vault.modify(file, joinFrontmatter(fm, content));
-        new Notice(`Stamped as ${fm.citekey}`);
-      },
+      callback: () => this.stampSource(),
     });
 
     this.addCommand({
       id: "cite",
       name: "Cite a passage",
-      editorCallback: async (editor: Editor) => {
-        const reg = await buildRegistry(this.app);
-        const items: BlockChoice[] = [];
-        for (const [citekey, entry] of Object.entries(reg)) {
-          for (const [blockId, text] of Object.entries(entry.blocks)) {
-            items.push({ citekey, blockId, text });
-          }
-        }
-        if (items.length === 0) {
-          new Notice("No stamped sources yet. Run “Stamp source” on a clipped note first.");
-          return;
-        }
-        new BlockPicker(this.app, items, (choice) => {
-          new LocatorModal(this.app, (locator) => {
-            const cite = insertCitation(reg, {
-              citekey: choice.citekey,
-              blockId: choice.blockId,
-              locator,
-              quote: choice.text,
-            });
-            editor.replaceSelection(cite);
-          }).open();
-        }).open();
-      },
+      callback: () => this.cite(),
     });
 
     this.addCommand({
       id: "integrity-check",
       name: "Integrity check (this note)",
-      editorCallback: async (_editor: Editor, ctx: MarkdownFileInfo) => {
-        const file = ctx.file;
-        if (!file) return;
-        const reg = await buildRegistry(this.app);
-        const text = await this.app.vault.read(file);
-        const issues = checkIntegrity(text, reg);
-        if (issues.length === 0) {
-          new Notice("✓ All citations resolve. No drift.");
-          return;
-        }
-        const lines = issues.map((i) => {
-          if (i.kind === "drift") return `DRIFT  ${i.citekey}#^${i.blockId}\n  quoted:  ${i.expected}\n  source:  ${i.actual}`;
-          if (i.kind === "unresolved-block") return `MISSING BLOCK  ${i.citekey}#^${i.blockId}`;
-          return `UNKNOWN SOURCE  ${i.citekey}`;
-        });
-        const report = `# Integrity report — ${file.basename}\n\n${lines.join("\n\n")}\n`;
-        await this.app.vault.create(`Integrity report — ${file.basename}.md`, report);
-        new Notice(`${issues.length} issue(s). See integrity report.`);
-      },
+      callback: () => this.integrityCheck(),
     });
+  }
+
+  /** Active markdown editor + its file, or null with a guiding notice. */
+  private activeNote(): { editor: Editor; file: TFile } | null {
+    const ae = this.app.workspace.activeEditor;
+    if (ae?.editor && ae.file) return { editor: ae.editor, file: ae.file };
+    new Notice("Open a markdown note first, then run this Cite Engine command.");
+    return null;
+  }
+
+  private async stampSource(): Promise<void> {
+    const ctx = this.activeNote();
+    if (!ctx) return;
+    const { file } = ctx;
+    const text = await this.app.vault.read(file);
+    const { fm, body } = splitFrontmatter(text);
+    if (!fm.citekey) {
+      fm.citekey = generateCitekey({
+        author: String(fm.author ?? ""),
+        year: String(fm.year ?? ""),
+        title: String(fm.title ?? file.basename),
+      });
+    }
+    const { content } = stampNote(body);
+    await this.app.vault.modify(file, joinFrontmatter(fm, content));
+    new Notice(`Stamped as ${fm.citekey}`);
+  }
+
+  private async cite(): Promise<void> {
+    const ctx = this.activeNote();
+    if (!ctx) return;
+    const { editor } = ctx;
+    const reg = await buildRegistry(this.app);
+    const items: BlockChoice[] = [];
+    for (const [citekey, entry] of Object.entries(reg)) {
+      for (const [blockId, text] of Object.entries(entry.blocks)) {
+        items.push({ citekey, blockId, text });
+      }
+    }
+    if (items.length === 0) {
+      new Notice("No stamped sources yet. Run “Stamp source” on a clipped note first.");
+      return;
+    }
+    new BlockPicker(this.app, items, (choice) => {
+      new LocatorModal(this.app, (locator) => {
+        const cite = insertCitation(reg, {
+          citekey: choice.citekey,
+          blockId: choice.blockId,
+          locator,
+          quote: choice.text,
+        });
+        editor.replaceSelection(cite);
+      }).open();
+    }).open();
+  }
+
+  private async integrityCheck(): Promise<void> {
+    const ctx = this.activeNote();
+    if (!ctx) return;
+    const { file } = ctx;
+    const reg = await buildRegistry(this.app);
+    const text = await this.app.vault.read(file);
+    const issues = checkIntegrity(text, reg);
+    if (issues.length === 0) {
+      new Notice("✓ All citations resolve. No drift.");
+      return;
+    }
+    const lines = issues.map((i) => {
+      if (i.kind === "drift") return `DRIFT  ${i.citekey}#^${i.blockId}\n  quoted:  ${i.expected}\n  source:  ${i.actual}`;
+      if (i.kind === "unresolved-block") return `MISSING BLOCK  ${i.citekey}#^${i.blockId}`;
+      return `UNKNOWN SOURCE  ${i.citekey}`;
+    });
+    const report = `# Integrity report — ${file.basename}\n\n${lines.join("\n\n")}\n`;
+    await this.app.vault.create(`Integrity report — ${file.basename}.md`, report);
+    new Notice(`${issues.length} issue(s). See integrity report.`);
   }
 }
