@@ -21,7 +21,7 @@ import {
 const FM_RE = /^---\n([\s\S]*?)\n---\n?/;
 
 function splitFrontmatter(text: string): { fm: Record<string, unknown>; body: string } {
-  text = text.replace(/^﻿/, "").replace(/\r\n/g, "\n");
+  text = text.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n");
   const m = text.match(FM_RE);
   if (!m) return { fm: {}, body: text };
   return { fm: (parseYaml(m[1]) as Record<string, unknown>) ?? {}, body: text.slice(m[0].length) };

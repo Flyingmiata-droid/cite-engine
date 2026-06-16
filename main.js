@@ -105,7 +105,7 @@ function checkIntegrity(text, reg) {
 // src/main.ts
 var FM_RE = /^---\n([\s\S]*?)\n---\n?/;
 function splitFrontmatter(text) {
-  text = text.replace(/^﻿/, "").replace(/\r\n/g, "\n");
+  text = text.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n");
   const m = text.match(FM_RE);
   if (!m) return { fm: {}, body: text };
   return { fm: (0, import_obsidian.parseYaml)(m[1]) ?? {}, body: text.slice(m[0].length) };
