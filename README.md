@@ -28,8 +28,7 @@ independent of filename, so renames don't break anything.
 
 ## Install
 
-**From Community Plugins** (once approved): Settings, Community plugins, Browse,
-search "Cite Engine".
+**From Community Plugins:** Settings, Community plugins, Browse, search "Cite Engine".
 
 **Beta / testing via BRAT:** install the BRAT plugin, run *Add a beta plugin*,
 and paste `Flyingmiata-droid/cite-engine`.
