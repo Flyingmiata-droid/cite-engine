@@ -13,6 +13,8 @@ your prose. It just tells you which quotes to look at.
 Works alongside Zotero, the Web Clipper, or any workflow where you keep your
 sources as notes in your vault.
 
+![Cite Engine flags a quote that no longer matches its source](https://raw.githubusercontent.com/Flyingmiata-droid/cite-engine/main/assets/cite-engine-drift-demo.gif)
+
 ## Three commands
 
 1. **Stamp source** — run on a clipped note. Adds a stable `citekey` to
