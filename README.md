@@ -1,10 +1,17 @@
 # Cite Engine
 
-Drift-proof, closed-corpus citations for Obsidian. You can only cite passages
-that exist in your own clipped sources, so **fabrication is impossible by
-construction**. A citation resolves to a passage (a native block reference), not
-to copied text, so it **won't silently go stale** when you edit or rename the
-source.
+You paste a quote into your writeup, then later edit or reword the source note.
+The link still works, so Obsidian shows everything as fine, but the words you
+quoted no longer match the source, and nothing warns you. Cite Engine catches
+that.
+
+It stamps your source notes, snapshots each quote at the moment you cite it, and
+an integrity check re-reads your sources and flags any quote that has drifted.
+No AI touches your citations, so it can never invent one, and it never rewrites
+your prose. It just tells you which quotes to look at.
+
+Works alongside Zotero, the Web Clipper, or any workflow where you keep your
+sources as notes in your vault.
 
 ## Three commands
 
@@ -47,4 +54,4 @@ npx tsc --noEmit   # typecheck
 ```
 
 The citation logic lives in `src/core.ts` with no Obsidian imports, so it's unit
-tested headless. `src/main.ts` is the thin Obsidian wrapper.
+tested headl

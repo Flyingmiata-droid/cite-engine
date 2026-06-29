@@ -1,9 +1,9 @@
 {
   "id": "cite-engine",
   "name": "Cite Engine",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "minAppVersion": "1.5.0",
-  "description": "Drift-proof, closed-corpus citations via block refs. Cite only from your clipped sources — fabrication impossible by construction.",
+  "description": "Catch quotes that silently went stale. When you edit a source note, Cite Engine flags any quote you pulled from it that no longer matches, so your literature notes and citations stay accurate.",
   "author": "Nick",
   "authorUrl": "https://github.com/Flyingmiata-droid",
   "isDesktopOnly": false
